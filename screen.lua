@@ -115,7 +115,7 @@ function HanoiScreen:buildLayout()
         board      = self.board,
         max_width  = board_max_w,
         max_height = board_max_h,
-        onPegTap   = function(p) self:onPegTap(p) end,
+        on_peg_tap = function(p) self:onPegTap(p) end,
     }
 
     local board_frame = FrameContainer:new{
