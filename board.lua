@@ -2,6 +2,8 @@
 -- HanoiBoard — Towers of Hanoi game logic
 -- ---------------------------------------------------------------------------
 
+local bit = require("bit")
+
 local HanoiBoard = {}
 HanoiBoard.__index = HanoiBoard
 
@@ -14,7 +16,7 @@ function HanoiBoard:new(opts)
     o.selected_peg  = nil
     o.moves         = 0
     o.won           = false
-    o.optimal       = (1 << num_disks) - 1
+    o.optimal       = bit.lshift(1, num_disks) - 1
     o:_reset()
     return o
 end
@@ -28,7 +30,7 @@ function HanoiBoard:_reset()
     self.selected_peg = nil
     self.moves        = 0
     self.won          = false
-    self.optimal      = (1 << nd) - 1
+    self.optimal      = bit.lshift(1, nd) - 1
 end
 
 function HanoiBoard:newGame(num_disks)
@@ -101,7 +103,7 @@ function HanoiBoard:load(data)
     self.selected_peg = data.selected_peg
     self.moves        = data.moves or 0
     self.won          = data.won   or false
-    self.optimal      = (1 << self.num_disks) - 1
+    self.optimal      = bit.lshift(1, self.num_disks) - 1
     return true
 end
 
