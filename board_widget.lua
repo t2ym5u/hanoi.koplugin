@@ -23,7 +23,7 @@ local HanoiBoardWidget = InputContainer:extend{
     board      = nil,
     max_width  = 200,
     max_height = 200,
-    onPegTap   = nil,
+    on_peg_tap = nil,
 }
 
 function HanoiBoardWidget:init()
@@ -57,7 +57,7 @@ function HanoiBoardWidget:onPegTap(_, ges)
     local peg    = math.floor(lx / zone_w) + 1
     if peg < 1 then peg = 1 end
     if peg > 3 then peg = 3 end
-    if self.onPegTap then self.onPegTap(peg) end
+    if self.on_peg_tap then self.on_peg_tap(peg) end
     return true
 end
 
