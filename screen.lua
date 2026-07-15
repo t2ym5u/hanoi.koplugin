@@ -185,7 +185,7 @@ end
 
 function HanoiScreen:openSizeMenu()
     local sizes = {}
-    for _, n in ipairs(DISK_SIZES) do
+    for idx, n in ipairs(DISK_SIZES) do
         sizes[#sizes + 1] = {
             id   = n,
             text = T(_("%1 disks"), n),
