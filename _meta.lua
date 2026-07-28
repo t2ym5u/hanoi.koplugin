@@ -3,5 +3,5 @@ return {
     name        = "hanoi",
     fullname    = _("Towers of Hanoi"),
     description = _("Move disks between pegs"),
-    version     = "1.1.7",
+    version     = "1.1.8",
 }
