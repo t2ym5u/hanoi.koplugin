@@ -119,6 +119,8 @@ function HanoiScreen:buildLayout()
         self.board_widget,
     }
 
+    self.status_text:setMaxWidth(is_landscape and btn_width or (board_max_w + frame_extra))
+
     if is_landscape then
         local right_panel = VerticalGroup:new{
             align = "center",
