@@ -5,7 +5,7 @@
 
 ## Screenshot
 
-*(Screenshot to be added.)*
+![Screenshot](images/hanoi.png)
 
 ## Rules
 
