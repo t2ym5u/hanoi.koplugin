@@ -6,6 +6,27 @@ Reconstructed from this repository's git history: each release lists the
 feature and fix commits it carried. Version bumps, screenshot additions
 and CI syncs are left out.
 
+## [1.2.0] - 2026-10-30
+
+### Added
+- "New game" appears under the status line once the puzzle is solved, so
+  the next round no longer needs the menu.
+- The rules now explain how to play: tap a peg to pick up its top disk, then
+  another peg to drop it.
+
+### Changed
+- Redesigned play screen, in line with the other games: a larger board that
+  fills the available room. The status line reads "3 disks · Moves: n ·
+  Optimal: n" and wraps in landscape instead of being cut off; the selected
+  peg is shown by its shading only.
+- Title-bar menu shows the current value: "Size: 3 disks".
+- New README screenshot.
+
+### Fixed
+- The peg letters under the board were about twice too tall on high-DPI
+  screens and overflowed their strip; they are now sized to fit it and
+  centred.
+
 ## [1.1.16] - 2026-10-07
 
 ### Fixed

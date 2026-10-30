@@ -34,8 +34,22 @@ function HanoiBoardWidget:init()
     self.dimen = Geom:new{ x = 0, y = 0, w = w, h = h }
     self.paint_rect = Geom:new{ x = 0, y = 0, w = w, h = h }
 
-    local label_sz = math.max(8, math.floor(h * 0.06))
-    self.label_face = Font:getFace("smallinfofont", label_sz)
+    -- Peg letters: the largest face whose ink fits the label strip under
+    -- the platform (see paintTo). Measured rather than scaled off `h`, since
+    -- Font:getFace() multiplies its size by DPI and a pixel-derived size came
+    -- out about twice too tall on a 300 dpi screen, overflowing the strip.
+    local strip_h = math.floor(h * 0.08)
+    local lo, hi, best = 6, math.max(6, strip_h), 6
+    while lo <= hi do
+        local mid = math.floor((lo + hi) / 2)
+        local m   = RenderText:sizeUtf8Text(0, w, Font:getFace("smallinfofont", mid), "ABC", true, false)
+        if (m.y_top + m.y_bottom) <= strip_h * 0.7 then
+            best, lo = mid, mid + 1
+        else
+            hi = mid - 1
+        end
+    end
+    self.label_face = Font:getFace("smallinfofont", best)
 
     self.ges_events = {
         PegTap = {
@@ -132,7 +146,8 @@ function HanoiBoardWidget:paintTo(bb, x, y)
         local lbl_y   = plat_y + platform_h
         local m       = RenderText:sizeUtf8Text(0, zone_w, self.label_face, label, true, false)
         local lbl_x   = peg_cx - math.floor(m.x / 2)
-        local lbl_base = lbl_y + math.floor((label_h - (m.y_bottom - m.y_top)) / 2) + m.y_bottom
+        -- Vertical centre of the strip: baseline = centre + (y_top - y_bottom) / 2.
+        local lbl_base = lbl_y + math.floor(label_h / 2 + (m.y_top - m.y_bottom) / 2)
         RenderText:renderUtf8Text(bb, lbl_x, lbl_base, self.label_face, label, true, false, C_LABEL)
     end
 end
