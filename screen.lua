@@ -7,7 +7,6 @@ local function lrequire(name)
     return package.loaded[key]
 end
 
-local ButtonTable     = require("ui/widget/buttontable")
 local Device          = require("device")
 local FrameContainer  = require("ui/widget/container/framecontainer")
 local HorizontalGroup = require("ui/widget/horizontalgroup")
@@ -33,6 +32,8 @@ Tower of Hanoi — Rules
 
 Move all disks from the first peg to the last peg.
 
+Tap a peg to pick up its top disk (the peg is shaded), then tap another peg to drop it there. Tap the same peg again to put the disk back.
+
 Rules:
 • Only one disk may be moved at a time.
 • Each move takes the top disk of one peg and places it on top of another peg.
@@ -45,6 +46,8 @@ local GAME_RULES_FR = [[
 Tours de Hanoï — Règles
 
 Déplacez tous les disques de la première tige vers la dernière.
+
+Appuyez sur une tige pour prendre son disque supérieur (la tige est grisée), puis sur une autre tige pour l'y déposer. Appuyez à nouveau sur la même tige pour reposer le disque.
 
 Règles :
 • Un seul disque peut être déplacé à la fois.
@@ -75,13 +78,7 @@ end
 -- ---------------------------------------------------------------------------
 
 function HanoiScreen:buildLayout()
-    local sw           = DeviceScreen:getWidth()
-    local sh = DeviceScreen:getHeight()
     local is_landscape = self:isLandscape()
-
-    local btn_width = is_landscape
-        and math.max(math.floor(sw * 0.38), 100)
-        or  math.floor(sw * 0.9)
 
     local title_bar = self:buildTitleBar(_("Towers of Hanoi"), function()
         return {
@@ -91,20 +88,23 @@ function HanoiScreen:buildLayout()
         }
     end)
 
-    local margin      = Size.margin.default
-    local padding     = Size.padding.large
-    local frame_extra = (padding + margin) * 2
-
-    local board_max_w, board_max_h
-    if is_landscape then
-        board_max_w = math.floor(sw * 0.55)
-        board_max_h = sh - frame_extra - 20
-    else
-        board_max_w = sw - frame_extra
-        board_max_h = sh - 60 - 30 - frame_extra * 2 - 40
+    -- Tapping the pegs is the only move: no action bar while
+    -- playing. Once the round is over, a "New game" bar appears under the status.
+    self.status_text:setMaxWidth(self:getControlsWidth())
+    local bar = self:buildActionBar({})
+    local controls = VerticalGroup:new{ align = "center", self.status_text }
+    if bar.round_over then
+        table.insert(controls, VerticalSpan:new{ width = Size.span.vertical_large })
+        table.insert(controls, bar)
     end
-    board_max_w = math.max(board_max_w, 80)
-    board_max_h = math.max(board_max_h, 80)
+
+    -- Fill the width, but cap the
+    -- height at 11/10 of it so a tall portrait budget doesn't stretch the rods.
+    local frame_pad   = Size.padding.large
+    local frame_extra = 2 * (frame_pad + Size.border.window)
+    local budget_w, budget_h = self:getBoardBudget(title_bar, controls)
+    local board_max_w = math.max(budget_w - frame_extra, 80)
+    local board_max_h = math.max(math.min(budget_h - frame_extra, math.floor(board_max_w * 1.1)), 80)
 
     self.board_widget = HanoiBoardWidget:new{
         board      = self.board,
@@ -112,35 +112,23 @@ function HanoiScreen:buildLayout()
         max_height = board_max_h,
         on_peg_tap = function(p) self:onPegTap(p) end,
     }
-
     local board_frame = FrameContainer:new{
-        padding = padding,
-        margin  = margin,
+        padding = frame_pad,
+        margin  = 0,
         self.board_widget,
     }
 
-    self.status_text:setMaxWidth(is_landscape and btn_width or (board_max_w + frame_extra))
-
     if is_landscape then
-        local right_panel = VerticalGroup:new{
-            align = "center",
-            self.status_text,
-        }
         local content = HorizontalGroup:new{
             align = "center",
             board_frame,
-            HorizontalSpan:new{ width = Size.span.horizontal_default },
-            right_panel,
+            HorizontalSpan:new{ width = self:getGutter() },
+            controls,
         }
         self:buildLandscapeLayout(title_bar, content)
     else
-        local content = VerticalGroup:new{
-            align = "center",
-            board_frame,
-            VerticalSpan:new{ width = Size.span.vertical_large },
-            self.status_text,
-        }
-        self:buildPortraitLayout(title_bar, content, nil)
+        self:buildPortraitLayout(title_bar, board_frame,
+            VerticalGroup:new{ align = "center", controls, VerticalSpan:new{ width = self:getGutter() } })
     end
     self:updateStatus()
 end
@@ -161,11 +149,25 @@ function HanoiScreen:onPegTap(p)
         self:updateStatus()
     end
     self.plugin:saveState(self.board:serialize())
+    self:refreshActionBar()
 end
 
 -- ---------------------------------------------------------------------------
 -- Game actions
 -- ---------------------------------------------------------------------------
+
+function HanoiScreen:isRoundOver()
+    return self.board.won and true or false
+end
+
+-- The bar only exists once the round is over, so showing or hiding it
+-- reflows the layout instead of swapping the bar in place.
+function HanoiScreen:refreshActionBar()
+    if self.action_bar and self:isRoundOver() ~= self.action_bar.round_over then
+        self:buildLayout()
+        UIManager:setDirty(self, function() return "ui", self.dimen end)
+    end
+end
 
 function HanoiScreen:onNewGame()
     local nd = self.plugin:getSetting("num_disks", 3)
@@ -184,7 +186,7 @@ function HanoiScreen:openSizeMenu()
         }
     end
     MenuHelper.openSizeMenu{
-        title     = _("Select disk count"),
+        title     = _("Size"),
         sizes     = sizes,
         current   = self.plugin:getSetting("num_disks", 3),
         parent    = self,
@@ -210,18 +212,18 @@ function HanoiScreen:updateStatus(msg)
         local b = self.board
         status = T(_("Congratulations! %1 moves (optimal: %2)"), b.moves, b.optimal)
     else
+        -- The selected peg is shaded on the board, so it isn't repeated here.
         local b = self.board
-        status = T(_("Moves: %1 / Optimal: %2"), b.moves, b.optimal)
-        if b.selected_peg then
-            status = status .. T(_(" — Peg %1 selected"), ({ "A", "B", "C" })[b.selected_peg])
-        end
+        status = self:joinStatus(T(_("%1 disks"), b.num_disks),
+            T(_("Moves: %1"), b.moves),
+            T(_("Optimal: %1"), b.optimal))
     end
     ScreenBase.updateStatus(self, status)
 end
 
 function HanoiScreen:getSizeButtonText()
     local n = self.plugin:getSetting("num_disks", 3)
-    return T(_("%1 disks"), n)
+    return T(_("Size: %1"), T(_("%1 disks"), n))
 end
 
 return HanoiScreen
