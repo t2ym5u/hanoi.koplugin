@@ -57,6 +57,43 @@ describe("HanoiBoard", function()
         end)
     end)
 
+    describe("isPerfect", function()
+        -- The classic recursive solution: exactly 2^n - 1 moves.
+        local function solve(b, n, from, to, via)
+            if n == 0 then return end
+            solve(b, n - 1, from, via, to)
+            b:selectPeg(from); b:selectPeg(to)
+            solve(b, n - 1, via, to, from)
+        end
+
+        for _, n in ipairs({ 3, 4, 5 }) do
+            it("is true for a win in 2^n - 1 moves (" .. n .. " disks)", function()
+                local b = Board:new({ num_disks = n })
+                assert.is_false(b:isPerfect())
+                solve(b, n, 1, 3, 2)
+                assert.is_true(b.won)
+                assert.are.equal(2 ^ n - 1, b.moves)
+                assert.is_true(b:isPerfect())
+            end)
+        end
+
+        it("is false for a win with extra moves, and survives a save", function()
+            local b = Board:new({ num_disks = 3 })
+            b:selectPeg(1); b:selectPeg(2)   -- smallest disk away...
+            b:selectPeg(2); b:selectPeg(1)   -- ...and back: 2 wasted moves
+            solve(b, 3, 1, 3, 2)
+            assert.is_true(b.won)
+            assert.are.equal(9, b.moves)
+            assert.is_false(b:isPerfect())
+
+            local p = Board:new({ num_disks = 3 })
+            solve(p, 3, 1, 3, 2)
+            local p2 = Board:new()
+            assert.is_true(p2:load(p:serialize()))
+            assert.is_true(p2:isPerfect())
+        end)
+    end)
+
     describe("serialize / load", function()
         it("round-trips peg contents and move count", function()
             local b = Board:new({ num_disks = 3 })

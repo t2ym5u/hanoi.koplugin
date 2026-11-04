@@ -19,6 +19,13 @@ Move all disks from the first peg to the last. Only one disk at a time. A larger
 - Move all disks to the rightmost peg to win.
 - The minimum number of moves is 2^n − 1 (e.g. 7 for 3 disks).
 
+## Features
+
+- Moves counter against the minimum 2ⁿ − 1.
+- **Perfect solves** — a win in exactly 2ⁿ − 1 moves is announced as the
+  minimum, and the *Size* menu shows ★ next to every disk count you've
+  solved perfectly.
+
 ## Controls
 
 | Action | Control |
@@ -32,7 +39,7 @@ Move all disks from the first peg to the last. Only one disk at a time. A larger
 
 ## Settings
 
-Disk count can be set from 2 to 8. More disks increase difficulty exponentially.
+Disk count can be set to 3, 4 or 5. Each extra disk doubles the minimum number of moves.
 
 ## License
 
