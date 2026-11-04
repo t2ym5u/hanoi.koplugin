@@ -77,6 +77,11 @@ function HanoiBoard:selectPeg(p)
     return "moved"
 end
 
+-- A win in the minimum, 2^n - 1 moves (moves can't be undone).
+function HanoiBoard:isPerfect()
+    return self.won and self.moves == self.optimal
+end
+
 function HanoiBoard:serialize()
     local p1, p2, p3 = {}, {}, {}
     for _, v in ipairs(self.pegs[1]) do p1[#p1 + 1] = v end

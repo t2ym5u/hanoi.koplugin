@@ -39,7 +39,7 @@ Rules:
 • Each move takes the top disk of one peg and places it on top of another peg.
 • A larger disk may never be placed on top of a smaller disk.
 
-The minimum number of moves to solve n disks is 2ⁿ − 1.
+The minimum number of moves to solve n disks is 2ⁿ − 1. Solve it in exactly that many and that size gets a star (★) in the Size menu.
 ]])
 
 local GAME_RULES_FR = [[
@@ -54,7 +54,7 @@ Règles :
 • Chaque déplacement consiste à prendre le disque supérieur d'une tige et à le placer sur le dessus d'une autre tige.
 • Un disque plus grand ne peut jamais être posé sur un disque plus petit.
 
-Le nombre minimum de déplacements pour résoudre n disques est 2ⁿ − 1.
+Le nombre minimum de déplacements pour résoudre n disques est 2ⁿ − 1. Réussissez en exactement autant de déplacements et cette taille reçoit une étoile (★) dans le menu Taille.
 ]]
 
 local HanoiScreen = ScreenBase:extend{}
@@ -65,6 +65,10 @@ function HanoiScreen:init()
     self.board = HanoiBoard:new{ num_disks = num_disks }
     if not self.board:load(state) then
         -- new board already ready
+    end
+    -- A perfect win saved before 1.3.0 recorded nothing: credit it now.
+    if self.board:isPerfect() then
+        self.plugin:saveSetting("perfect_" .. self.board.num_disks, true)
     end
     ScreenBase.init(self)
 end
@@ -141,8 +145,11 @@ function HanoiScreen:onPegTap(p)
     local result = self.board:selectPeg(p)
     self.board_widget:refresh()
     if result == "won" then
-        local b = self.board
-        self:updateStatus(T(_("Congratulations! %1 moves (optimal: %2)"), b.moves, b.optimal))
+        -- A perfect solve is kept per disk count (never taken back).
+        if self.board:isPerfect() then
+            self.plugin:saveSetting("perfect_" .. self.board.num_disks, true)
+        end
+        self:updateStatus()
     elseif result == "invalid" then
         self:updateStatus(_("Invalid move."))
     else
@@ -177,12 +184,17 @@ function HanoiScreen:onNewGame()
     UIManager:setDirty(self, function() return "ui", self.dimen end)
 end
 
+-- Solved at least once in the minimum 2^n - 1 moves with n disks.
+function HanoiScreen:isPerfect(n)
+    return self.plugin:getSetting("perfect_" .. n, false) == true
+end
+
 function HanoiScreen:openSizeMenu()
     local sizes = {}
     for idx, n in ipairs(DISK_SIZES) do
         sizes[#sizes + 1] = {
             id   = n,
-            text = T(_("%1 disks"), n),
+            text = T(_("%1 disks"), n) .. (self:isPerfect(n) and " ★" or ""),
         }
     end
     MenuHelper.openSizeMenu{
@@ -210,7 +222,11 @@ function HanoiScreen:updateStatus(msg)
         status = msg
     elseif self.board.won then
         local b = self.board
-        status = T(_("Congratulations! %1 moves (optimal: %2)"), b.moves, b.optimal)
+        if b:isPerfect() then
+            status = T(_("Congratulations! %1 moves, the minimum!"), b.moves)
+        else
+            status = T(_("Congratulations! %1 moves (optimal: %2)"), b.moves, b.optimal)
+        end
     else
         -- The selected peg is shaded on the board, so it isn't repeated here.
         local b = self.board

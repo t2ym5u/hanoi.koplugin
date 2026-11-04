@@ -6,6 +6,13 @@ Reconstructed from this repository's git history: each release lists the
 feature and fix commits it carried. Version bumps, screenshot additions
 and CI syncs are left out.
 
+## [1.3.0] - 2026-11-04
+
+### Added
+- A win in the minimum 2ⁿ − 1 moves says so ("…, the minimum!") and is
+  remembered per disk count: the *Size* menu shows ★ next to each size
+  you've solved perfectly. A slower win never takes the star away.
+
 ## [1.2.5] - 2026-11-04
 
 ### Fixed
