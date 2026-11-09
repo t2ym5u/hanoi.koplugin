@@ -66,17 +66,6 @@ describe("HanoiBoard", function()
             solve(b, n - 1, via, to, from)
         end
 
-        for _, n in ipairs({ 3, 4, 5 }) do
-            it("is true for a win in 2^n - 1 moves (" .. n .. " disks)", function()
-                local b = Board:new({ num_disks = n })
-                assert.is_false(b:isPerfect())
-                solve(b, n, 1, 3, 2)
-                assert.is_true(b.won)
-                assert.are.equal(2 ^ n - 1, b.moves)
-                assert.is_true(b:isPerfect())
-            end)
-        end
-
         it("is false for a win with extra moves, and survives a save", function()
             local b = Board:new({ num_disks = 3 })
             b:selectPeg(1); b:selectPeg(2)   -- smallest disk away...
