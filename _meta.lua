@@ -2,5 +2,5 @@ local _ = require("gettext")
 return {
     fullname    = _("Towers of Hanoi"),
     description = _("Move disks between pegs"),
-    version     = "1.3.4",
+    version     = "1.3.5",
 }
